@@ -31,10 +31,12 @@
 /// THE SOFTWARE.
 
 import UIKit
+import CoreData
 
 final class NewListViewController: UIViewController {
   @IBOutlet weak var doneButton: UIBarButtonItem!
   @IBOutlet weak var textField: UITextField!
+  var context: NSManagedObjectContext?
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -42,8 +44,18 @@ final class NewListViewController: UIViewController {
   
   @IBAction func done(_ sender: Any) {
     guard let title = textField.text else { return }
-    
+    guard let context = self.context else {  return}
+
+    let newList = List(context: context)
+    newList.title = title
+    do{
+      try context.save()
+      dismiss(animated: true)
+    }catch{
+      fatalError("Core data could not save error")
+    }
     // Add code here
+    
   }
   
   @IBAction func cancel(_ sender: Any) {

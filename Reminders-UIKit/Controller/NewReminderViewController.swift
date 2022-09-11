@@ -31,10 +31,13 @@
 /// THE SOFTWARE.
 
 import UIKit
+import CoreData
 
 final class NewReminderViewController: UITableViewController {
   @IBOutlet weak var titleTextField: UITextField!
   @IBOutlet weak var attachmentImageView: UIImageView!
+  var context: NSManagedObjectContext?
+  var list: List?// refrence to the list so we can save to the specific list
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -46,8 +49,19 @@ final class NewReminderViewController: UITableViewController {
   
   @IBAction func saveReminder(_ sender: Any) {
     guard let title = titleTextField.text else { return }
+    guard let context = self.context else {return}
+    guard let list = self.list else {return}
+    // Adding item to the list and to Core data
+    let newReminder = Reminder(context: context)
+    newReminder.title = title
+    newReminder.list = list
     
-    // Add code here
+    do{
+      try context.save()
+      dismiss(animated: true, completion: nil)
+    }catch{
+     fatalError("New Reminder View Controller")
+    }
   }
 }
 

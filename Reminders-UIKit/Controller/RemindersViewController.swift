@@ -31,9 +31,11 @@
 /// THE SOFTWARE.
 
 import UIKit
+import CoreData
 
 class RemindersViewController: UITableViewController {
   var list: List?
+  var context: NSManagedObjectContext?
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -56,8 +58,9 @@ extension RemindersViewController {
     guard let newReminderViewController = (segue.destination as? UINavigationController)?.topViewController as? NewReminderViewController else {
       return
     }
-    
-    // Add code here
+    // Prepare reminder with core
+    newReminderViewController.context = self.context
+    newReminderViewController.list = self.list
   }
 }
 

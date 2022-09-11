@@ -36,6 +36,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UISplitViewControllerDe
   var window: UIWindow?
   
   func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+    guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {return}
     guard let window = window else { return }
     guard let splitViewController = window.rootViewController as? UISplitViewController else { return }
     guard let navigationController = splitViewController.viewControllers.last as? UINavigationController else { return }
@@ -45,7 +46,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, UISplitViewControllerDe
     
     let masterNavigationController = splitViewController.viewControllers[0] as! UINavigationController
     let controller = masterNavigationController.topViewController as! ListViewController
-    
+    controller.context = appDelegate.persistentContainer.viewContext
     // Add code
   }
   
