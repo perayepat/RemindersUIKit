@@ -36,11 +36,52 @@ import CoreData
 class RemindersViewController: UITableViewController {
   var list: List?
   var context: NSManagedObjectContext?
+   //fetch reminders from the data store
+  private lazy var fetchedResultsController: NSFetchedResultsController<Reminder> = {
+    let fetchRequest: NSFetchRequest<Reminder> = Reminder.fetchRequest()
+    let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+    fetchRequest.sortDescriptors = [sortDescriptor]
+    //Predicate
+    // Fetch only the reminders that match this list
+    let predicate  = NSPredicate(format: "%K == %@", "list.title", self.list!.title)
+    fetchRequest.predicate = predicate
+    
+    let frc = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.context!, sectionNameKeyPath: nil, cacheName: nil)
+    
+    frc.delegate = self
+    return frc
+    
+  }()
   
+  //diffable data source
+  //using NSMangaedObjectId instead of Reminder becuase insances of NSManagedObjectID contain all the information needed by the fetch result controller to see what changed
+  lazy var dataSource: UITableViewDiffableDataSource<String, NSManagedObjectID> = {
+    let dataSource = UITableViewDiffableDataSource<String, NSManagedObjectID>(tableView: tableView) { (tableView, indexPath, objectId) -> UITableViewCell? in
+      //retrive instance of reminder
+      //Using NSmanagedObeject
+      guard let reminder = try? self.context?.existingObject(with: objectId) as? Reminder else {return nil}
+      let cell = UITableViewCell(style: .default, reuseIdentifier: "ReminderCell")
+      cell.textLabel?.text = reminder.title
+      return cell
+    }
+    tableView.dataSource = dataSource
+    return dataSource
+    //The snapshot is handleded by the fetch results controller
+    //when the fetch results controller tells its contents that is has changed it will update the snapshot
+}()
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    
+    do {
+      try fetchedResultsController.performFetch()
+    }catch{
+      fatalError("Core Data in Reminder")
+    }
+  }
+  //snapshot provided with the argument to apply with the data source
+  func  controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChangeContentWith snapshot: NSDiffableDataSourceSnapshotReference) {
+    let reminderSnapshot = snapshot as NSDiffableDataSourceSnapshot<String, NSManagedObjectID>
+    dataSource.apply(reminderSnapshot)
   }
 }
 
@@ -83,4 +124,9 @@ extension RemindersViewController {
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     tableView.deselectRow(at: indexPath, animated: true)
   }
+}
+
+// MARK: - Result Controller Delegate -
+extension RemindersViewController: NSFetchedResultsControllerDelegate{
+  
 }

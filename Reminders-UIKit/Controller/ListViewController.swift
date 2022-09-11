@@ -95,8 +95,14 @@ extension ListViewController {
     guard let indexPath = tableView.indexPathForSelectedRow else {
       return
     }
-    remindersViewController.context = self.context
     // Prepare the context for detail view
+    remindersViewController.context = self.context
+    
+    //pass the list along with to show the exact reminders
+    //find the list tapped using the fetched result controller and then pass that list along
+    
+    let list = fetchedResultsController.object(at: indexPath)
+    remindersViewController.list = list
   }
   
   private func handleAddNewListSegue(newListViewController: NewListViewController) {
