@@ -47,10 +47,11 @@ class ListViewController: UITableViewController {
     //predicate can be added
     // section name key path can provide the titles for the table view if neeeded
     let frc = NSFetchedResultsController(fetchRequest: fetchRequest,
-                                        managedObjectContext: self.context!,
-                                        sectionNameKeyPath: nil,
-                                        cacheName: nil)
+                                         managedObjectContext: self.context!,
+                                         sectionNameKeyPath: nil,
+                                         cacheName: nil)
     
+    frc.delegate = self
     return frc
   }()
   
@@ -60,7 +61,6 @@ class ListViewController: UITableViewController {
     
     do{
       try fetchedResultsController.performFetch()
-      tableView.reloadData()
     }catch{
       fatalError("Could not fetch the results")
     }
@@ -127,3 +127,56 @@ extension ListViewController {
     return cell
   }
 }
+
+// MARK: - Fetch Results Controller Delegate-
+extension ListViewController: NSFetchedResultsControllerDelegate {
+  /*this is called after the fetched results controller
+   func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+   //everytime a change occurs we can respond to changes
+   tableView.reloadData()
+   }
+   */
+  
+  //this is called before the changes are about to be processed
+  func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+    tableView.beginUpdates()
+  }
+  
+  //as the fetch results controller makes each change
+  //notifies the delegate in the specific chnage in the the obeject
+  func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?){
+    guard let list  = anObject as? List else {return}
+    //switch on the type of operation the deledate is being called about
+    switch type {
+    case .insert:
+      guard let newIndexPath = newIndexPath else { return }
+      tableView.insertRows(at: [newIndexPath], with: .fade)
+    case .delete:
+      guard let indexPath = indexPath else {
+        return
+      }
+      tableView.deleteRows(at: [indexPath], with: .fade)
+    case .move:
+      //use the new index path and ask the table view to move the row to the current to new index path
+      guard let indexPath = indexPath, let newIndexPath = newIndexPath else {
+        return
+      }
+      tableView.moveRow(at: indexPath, to: newIndexPath)
+    case .update:
+      //get the cell at the index path and update it with the change
+      guard let indexPath = indexPath, let cell = tableView.cellForRow(at: indexPath) else {
+        return
+      }
+      cell.textLabel?.text = list.title
+      default:
+      return
+    }
+  }
+  
+  //this is called once the changes are worked through
+  func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+    tableView.endUpdates()
+  }
+}
+
+
