@@ -37,8 +37,10 @@ class RemindersViewController: UITableViewController {
   var list: List?
   var context: NSManagedObjectContext?
   
+  
   override func viewDidLoad() {
     super.viewDidLoad()
+    
   }
 }
 

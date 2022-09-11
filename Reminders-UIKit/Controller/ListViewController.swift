@@ -35,10 +35,35 @@ import CoreData
 
 class ListViewController: UITableViewController {
   var context: NSManagedObjectContext?
+  private lazy var fetchedResultsController: NSFetchedResultsController<List> = {
+    //create the fetch request
+    let fetchRequest: NSFetchRequest<List> = List.fetchRequest()
+    fetchRequest.fetchLimit = 20
+    
+    //sort Descriptor
+    let sortDescriptior = NSSortDescriptor(key: "title", ascending: false)
+    fetchRequest.sortDescriptors = [sortDescriptior]
+    
+    //predicate can be added
+    // section name key path can provide the titles for the table view if neeeded
+    let frc = NSFetchedResultsController(fetchRequest: fetchRequest,
+                                        managedObjectContext: self.context!,
+                                        sectionNameKeyPath: nil,
+                                        cacheName: nil)
+    
+    return frc
+  }()
   
   override func viewDidLoad() {
     super.viewDidLoad()
     setupViews()
+    
+    do{
+      try fetchedResultsController.performFetch()
+      tableView.reloadData()
+    }catch{
+      fatalError("Could not fetch the results")
+    }
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -81,16 +106,24 @@ extension ListViewController {
 }
 
 // MARK: - Table View -
+// for data source controllers
 extension ListViewController {
   override func numberOfSections(in tableView: UITableView) -> Int {
-    return 0
+    return fetchedResultsController.sections?.count ?? 0
   }
   
   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return 0
+    guard let sectionInfo = fetchedResultsController.sections?[section] else {return 0}
+    //fetched results exposes this allwoing you to get the number of objects in each section
+    return sectionInfo.numberOfObjects
   }
   
   override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    return UITableViewCell()
+    let cell  = tableView.dequeueReusableCell(withIdentifier: "ListCell", for: indexPath)
+    //takes an index path and returns an instance of fetched result
+    let list = fetchedResultsController.object(at: indexPath)
+    
+    cell.textLabel?.text = list.title
+    return cell
   }
 }
